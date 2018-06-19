@@ -5,13 +5,26 @@ variable "env" {
 }
 
 variable "fqdn" {
-  type = "string"
+  type    = "string"
+  default = "asics.digital"
 }
 
-variable "vpc_id" {
-  type = "string"
+variable "docker_image" {
+  type    = "string"
+  default = "asicsdigital/healthcheck:latest"
 }
 
-variable "aws_key_name" {
-  type = "string"
+variable "ecs_desired_count" {
+  type    = "string"
+  default = "2"
+}
+
+variable "port" {
+  type    = "string"
+  default = "8080"
+}
+
+variable "healthcheck_path" {
+  type    = "string"
+  default = "/static-hc"
 }

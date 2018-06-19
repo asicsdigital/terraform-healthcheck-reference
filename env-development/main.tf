@@ -1,10 +1,12 @@
 # DEVELOPMENT
+locals {
+  hostname = "${var.env}.${var.fqdn}"
+  vpc_name = "asics-services-${var.env}-us-east-1"
+}
 
 data "aws_availability_zones" "available" {}
 
-data "aws_region" "current" {
-  current = true
-}
+data "aws_region" "current" {}
 
 data "aws_region" "us-east-1" {
   name = "us-east-1"
@@ -15,11 +17,13 @@ data "aws_region" "us-west-1" {
 }
 
 data "aws_route53_zone" "zone" {
-  name = "${var.fqdn}." # feel free to make this lookup more sophisticated
+  name = "${local.hostname}."
 }
 
 data "aws_vpc" "vpc" {
-  id = "${var.vpc_id}"
+  tags = {
+    "Name" = "${local.vpc_name}"
+  }
 }
 
 # this returns a list of strings
@@ -64,15 +68,4 @@ data "aws_subnet_ids" "database" {
 data "aws_subnet" "database" {
   count = "${length(data.aws_subnet_ids.database.ids)}"
   id    = "${data.aws_subnet_ids.database.ids[count.index]}"
-}
-
-data "aws_acm_certificate" "cloudfront" {
-  domain   = "${var.fqdn}"
-  statuses = ["ISSUED"]
-  provider = "aws.us-east-1"
-}
-
-data "aws_acm_certificate" "cert" {
-  domain   = "${var.fqdn}"
-  statuses = ["ISSUED"]
 }
