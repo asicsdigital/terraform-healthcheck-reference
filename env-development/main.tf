@@ -1,7 +1,9 @@
 # DEVELOPMENT
 locals {
-  hostname = "${var.env}.${var.fqdn}"
-  vpc_name = "asics-services-${var.env}-us-east-1"
+  hostname    = "${var.env}.${var.fqdn}"
+  vpc_name    = "asics-services-${var.env}-us-east-1"
+  consul_addr = "https://asics-services.us-east-1.${local.hostname}"
+  vault_addr  = "https://vault.us-east-1.${local.hostname}"
 }
 
 data "aws_availability_zones" "available" {}
@@ -68,4 +70,9 @@ data "aws_subnet_ids" "database" {
 data "aws_subnet" "database" {
   count = "${length(data.aws_subnet_ids.database.ids)}"
   id    = "${data.aws_subnet_ids.database.ids[count.index]}"
+}
+
+provider "vault" {
+  version = "1.1.0"
+  address = "${local.vault_addr}"
 }

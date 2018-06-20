@@ -1,6 +1,7 @@
 # Healthcheck service
 
 locals {
+  consul_http_auth   = "consul:${data.vault_generic_secret.consul_http_passwd.data["value"]}"
   consul_prefix      = "${var.stack}"
   ecs_cluster        = "asics-services-${var.env}-infra-svc"
   ecs_security_group = "ecs-sg-${local.ecs_cluster}"
@@ -47,6 +48,14 @@ module "healthcheck" {
       "name"  = "CONSUL_PREFIX"
       "value" = "${local.consul_prefix}"
     },
+    {
+      "name"  = "CONSUL_HTTP_ADDR"
+      "value" = "${local.consul_addr}"
+    },
+    {
+      "name"  = "CONSUL_HTTP_AUTH"
+      "value" = "${local.consul_http_auth}"
+    },
   ]
 }
 
@@ -91,4 +100,8 @@ resource "aws_route53_record" "api_aaaa" {
     zone_id                = "${module.healthcheck.alb_zone_id}"
     evaluate_target_health = false
   }
+}
+
+data "vault_generic_secret" "consul_http_passwd" {
+  path = "${var.vault_consul_http_passwd_path}"
 }
