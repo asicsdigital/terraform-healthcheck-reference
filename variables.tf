@@ -45,7 +45,7 @@ variable "region" {
 # This should be changed to reflect the service / stack defined by this repo
 # for example replace "ref" with "cms", "slackbot", etc
 variable "stack" {
-  default = "healthcheck"
+  default = "hc"
 }
 
 variable "tf_s3_bucket" {
