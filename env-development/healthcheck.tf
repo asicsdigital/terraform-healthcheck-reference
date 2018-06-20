@@ -33,6 +33,8 @@ module "healthcheck" {
   alb_subnet_ids               = ["${data.aws_subnet_ids.public.ids}"]
   app_port                     = "${var.port}"
   vpc_id                       = "${data.aws_vpc.vpc.id}"
+  alb_healthcheck_path         = "${var.healthcheck_path}"
+  alb_healthcheck_interval     = 10
 
   docker_port_mappings = [
     {
