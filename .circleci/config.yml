@@ -320,6 +320,8 @@ workflows:
           filters:
             tags:
               only: /^deploy-dev-.+/
+            branches:
+              ignore: /.*/
 #          filters:
 #            branches:
 #              only: development-release
