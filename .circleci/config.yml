@@ -315,8 +315,7 @@ workflows:
               ignore: /.*/
   build:
     jobs:
-      - fmt:
-          filters:
+      - fmt
       - base:
           context: org-global
           requires:
