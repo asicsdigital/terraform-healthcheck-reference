@@ -1,4 +1,4 @@
-# DEVELOPMENT
+# STAGING
 locals {
   hostname    = "${var.env}.${var.fqdn}"
   consul_addr = "https://asics-services.us-east-1.${local.hostname}"
