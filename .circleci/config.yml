@@ -304,6 +304,8 @@ workflows:
               only: /^deploy-dev-.+/
       - deploy-dev:
           context: org-global
+          requires:
+            - fmt          
           filters:
             tags:
               only: /^deploy-dev-.+/
