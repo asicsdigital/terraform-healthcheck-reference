@@ -313,7 +313,6 @@ workflows:
               only: /^deploy-dev-.+/
             branches:
               ignore: /.*/
-
   build:
     jobs:
       - fmt:
