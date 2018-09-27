@@ -302,10 +302,12 @@ workflows:
           filters:
             tags:
               only: /^deploy-dev-.+/
+            branches:
+              ignore: /.*/
       - deploy-dev:
           context: org-global
           requires:
-            - fmt          
+            - fmt
           filters:
             tags:
               only: /^deploy-dev-.+/
