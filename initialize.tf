@@ -29,7 +29,4 @@ variable "healthcheck_path" {
   default = "/static-hc"
 }
 
-variable "vault_consul_http_passwd_path" {
-  description = "path in Vault to look up Consul HTTP auth password"
-  type        = "string"
-}
+variable "consul_http_auth" {}
