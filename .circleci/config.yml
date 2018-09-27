@@ -311,7 +311,7 @@ workflows:
           context: org-global
           filters:
             tags:
-              only: /^deploy-dev-.*/
+              only: /deploy-dev-.+/
             branches:
               ignore: /.*/
 #          filters:
