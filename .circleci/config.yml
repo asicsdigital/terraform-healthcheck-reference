@@ -296,6 +296,24 @@ jobs:
 
 workflows:
   version: 2
+  deploy-dev:
+    jobs:
+      - fmt:
+          filters:
+            tags:
+              only: /^deploy-dev-.+/
+            branches:
+              ignore: /.*/
+      - deploy-dev:
+          context: org-global
+          requires:
+            - fmt
+          filters:
+            tags:
+              only: /^deploy-dev-.+/
+            branches:
+              ignore: /.*/
+
   build:
     jobs:
       - fmt:
@@ -313,15 +331,15 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - deploy-dev:
-          context: org-global
-          requires:
-            - plan-dev
-          filters:
-            tags:
-              only: /^deploy-dev-.+/
-            branches:
-              ignore: /.*/
+#      - deploy-dev:
+#          context: org-global
+#          requires:
+#            - plan-dev
+#          filters:
+#            tags:
+#              only: /^deploy-dev-.+/
+#            branches:
+#              ignore: /.*/
 #          filters:
 #            branches:
 #              only: development-release
