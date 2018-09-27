@@ -296,6 +296,57 @@ jobs:
 
 workflows:
   version: 2
+  deploy-prod:
+    jobs:
+      - fmt:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+      - deploy-prod:
+          context: org-global
+          requires:
+            - fmt
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+  deploy-hotfix:
+    jobs:
+      - fmt:
+          filters:
+            tags:
+              only: /^deploy-hotfix-.+/
+            branches:
+              ignore: /.*/
+      - deploy-prod:
+          context: org-global
+          requires:
+            - fmt
+          filters:
+            tags:
+              only: /^deploy-hotfix-.+/
+            branches:
+              ignore: /.*/
+  deploy-staging:
+    jobs:
+      - fmt:
+          filters:
+            tags:
+              only: /^deploy-staging-.+/
+            branches:
+              ignore: /.*/
+      - deploy-staging:
+          context: org-global
+          requires:
+            - fmt
+          filters:
+            tags:
+              only: /^deploy-staging-.+/
+            branches:
+              ignore: /.*/
   deploy-dev:
     jobs:
       - fmt:
@@ -324,27 +375,11 @@ workflows:
           context: org-global
           requires:
             - fmt
-#          filters:
-#            branches:
-#              only: development-release
       - plan-staging:
           context: org-global
           requires:
             - fmt
-      - deploy-staging:
-          context: org-global
-          requires:
-          filters:
-            branches:
-              only: staging-release
       - plan-prod:
           context: org-global
           requires:
             - fmt
-      - deploy-prod:
-          context: org-global
-          requires:
-            - plan-prod
-          filters:
-            branches:
-              only: production-release
