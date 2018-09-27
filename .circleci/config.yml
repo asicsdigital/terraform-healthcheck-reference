@@ -318,8 +318,6 @@ workflows:
     jobs:
       - fmt:
           filters:
-            tags:
-              only: /.*/
       - base:
           context: org-global
           requires:
@@ -328,9 +326,6 @@ workflows:
           context: org-global
           requires:
             - fmt
-          filters:
-            tags:
-              only: /.*/
 #      - deploy-dev:
 #          context: org-global
 #          requires:
@@ -347,9 +342,6 @@ workflows:
           context: org-global
           requires:
             - fmt
-          filters:
-            tags:
-              only: /.*/
       - deploy-staging:
           context: org-global
           requires:
@@ -360,9 +352,6 @@ workflows:
           context: org-global
           requires:
             - fmt
-          filters:
-            tags:
-              only: /.*/
       - deploy-prod:
           context: org-global
           requires:
