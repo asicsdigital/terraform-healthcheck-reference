@@ -3,7 +3,6 @@
 docker_terraform: &docker_terraform
   working_directory: ~/terraform
   docker:
-#    - image: asicsdigital/hermes:0.11.7
     - image: asicsdigital/hermes:terraform-0.11.7
       entrypoint: /bin/sh
 
