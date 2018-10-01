@@ -1,7 +1,6 @@
 # DEVELOPMENT
 locals {
   hostname    = "${var.env}.${var.fqdn}"
-  vpc_name    = "asics-services-${var.env}-us-east-1"
   consul_addr = "https://asics-services.us-east-1.${local.hostname}"
   vault_addr  = "https://vault.us-east-1.${local.hostname}"
 }
@@ -23,9 +22,7 @@ data "aws_route53_zone" "zone" {
 }
 
 data "aws_vpc" "vpc" {
-  tags = {
-    "Name" = "${local.vpc_name}"
-  }
+  id = "${data.consul_keys.vpc.var.id}"
 }
 
 # this returns a list of strings
@@ -72,7 +69,20 @@ data "aws_subnet" "database" {
   id    = "${data.aws_subnet_ids.database.ids[count.index]}"
 }
 
+data "consul_keys" "vpc" {
+  key {
+    name = "id"
+    path = "aws/vpc/VpcId"
+  }
+}
+
 provider "vault" {
   version = "1.1.0"
   address = "${local.vault_addr}"
+}
+
+provider "consul" {
+  address   = "asics-services.${data.aws_region.current.name}.${var.env}.asics.digital"
+  http_auth = "${var.consul_http_auth}"
+  scheme    = "https"
 }

@@ -1,0 +1,385 @@
+---
+# Anchors for aliases
+docker_terraform: &docker_terraform
+  working_directory: ~/terraform
+  docker:
+    - image: asicsdigital/hermes:terraform-0.11.7
+      entrypoint: /bin/sh
+
+terraform_fmt: &terraform_fmt
+  name: terraform-fmt
+  command: terraform fmt -write=false -list=true -diff=true
+
+terraform_init: &terraform_init
+  name: terraform-init
+  command: terraform init -input=false
+
+terraform_validate: &terraform_validate
+  name: terraform-validate
+  command: terraform validate -check-variables=false
+
+terraform_plan: &terraform_plan
+  name: terraform-plan
+  command: terraform plan
+
+terraform_apply: &terraform_apply
+  name: terraform-apply
+  command: terraform apply -auto-approve=true
+
+set_dev_env: &set_dev_env
+  name: Setup Dev Environment Variables
+  command: |
+    echo 'export "VAULT_PAYLOAD=$DEV_vault_payload_us_east_1"' >> $BASH_ENV
+
+set_staging_env: &set_staging_env
+  name: Setup Staging Environment Variables
+  command: |
+    echo 'export "VAULT_PAYLOAD=$STAGING_vault_payload_us_east_1"' >> $BASH_ENV
+
+set_prod_env: &set_prod_env
+  name: Setup Prod Environment Variables
+  command: |
+    echo 'export "VAULT_PAYLOAD=$PROD_vault_payload_us_east_1"' >> $BASH_ENV
+
+set_auth_tokens: &set_auth_tokens
+  name: "Get credentials from Vault"
+  command: |
+    set-vault-token
+    get-iam-auth
+
+vault_addr_dev: &vault_addr_dev
+  environment:
+    VAULT_ADDR: https://vault.us-east-1.dev.asics.digital
+
+vault_addr_staging: &vault_addr_staging
+  environment:
+    VAULT_ADDR: https://vault.us-east-1.staging.asics.digital
+
+vault_addr_prod: &vault_addr_prod
+  environment:
+    VAULT_ADDR: https://vault.us-east-1.prod.asics.digital
+
+get_consul_htpasswd: &get_consul_htpasswd
+  name: get-consul-htpasswd
+  command: get-consul-http-auth
+
+revoke_lease: &revoke_lease
+  name: "Revoke AWS IAM credentials from Vault"
+  command: lease-revoke
+
+version: 2
+
+jobs:
+  fmt:
+    <<: *docker_terraform
+    steps:
+      - checkout
+      - run:
+          <<: *terraform_fmt
+
+  base:
+    <<: *docker_terraform
+    <<: *vault_addr_prod
+    steps:
+      - checkout
+      - run:
+          <<: *set_prod_env
+      - run:
+          <<: *set_auth_tokens
+      - run:
+          working_directory: ~/terraform/base
+          <<: *terraform_init
+      - run:
+          working_directory: ~/terraform/base
+          <<: *terraform_validate
+      - run:
+          name: terraform-plan
+          command: |
+            terraform plan \
+              -var 'consul_htpasswd=""' \
+              -var 'consul_http_auth=""' \
+              -var 'consul_http_addr=""' \
+              -var 'database_cidrs=[]' \
+              -var 'elasticache_cidrs=[]' \
+              -var 'private_cidrs=[]' \
+              -var 'public_cidrs=[]' \
+              -var 'vpc_cidr=null' \
+              -var 'kms_secret_vault_unseal_key=null'
+          working_directory: ~/terraform/base
+      - run:
+          <<: *revoke_lease
+
+  base-deploy:
+    <<: *docker_terraform
+    <<: *vault_addr_prod
+    steps:
+      - checkout
+      - run:
+          <<: *set_prod_env
+      - run:
+          <<: *set_auth_tokens
+      - run:
+          working_directory: ~/terraform/base
+          <<: *terraform_init
+      - run:
+          name: terraform-apply -auto-approve=true
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "base-release" ]; then
+              cd ~/terraform/base ;
+              terraform apply \
+                -var 'consul_htpasswd=""' \
+                -var 'consul_http_auth=""' \
+                -var 'consul_http_addr'=""' \
+                -var 'database_cidrs=[]' \
+                -var 'elasticache_cidrs=[]' \
+                -var 'private_cidrs=[]' \
+                -var 'public_cidrs=[]' \
+                -var 'vpc_cidr=null' \
+                -var 'kms_secret_vault_unseal_key=null'
+            fi
+          working_directory: ~/terraform/base
+      - run:
+          <<: *revoke_lease
+
+  plan-dev:
+    <<: *docker_terraform
+    <<: *vault_addr_dev
+    steps:
+      - checkout
+      - run:
+          <<: *set_dev_env
+      - run:
+          <<: *set_auth_tokens
+      - run:
+          working_directory: ~/terraform/env-development
+          <<: *get_consul_htpasswd
+      - run:
+          working_directory: ~/terraform/env-development
+          <<: *terraform_init
+      - run:
+          working_directory: ~/terraform/env-development
+          <<: *terraform_validate
+      - run:
+          working_directory: ~/terraform/env-development
+          <<: *terraform_plan
+      - run:
+          <<: *revoke_lease
+
+  deploy-dev:
+    <<: *docker_terraform
+    <<: *vault_addr_dev
+    steps:
+      - checkout
+      - run:
+          <<: *set_dev_env
+      - run:
+          <<: *set_auth_tokens
+      - run:
+          working_directory: ~/terraform/env-development
+          <<: *get_consul_htpasswd
+      - run:
+          working_directory: ~/terraform/env-development
+          <<: *terraform_init
+      - run:
+          working_directory: ~/terraform/env-development
+          <<: *terraform_validate
+      - run:
+          working_directory: ~/terraform/env-development
+          <<: *terraform_plan
+      - run:
+          working_directory: ~/terraform/env-development
+          <<: *terraform_apply
+      - run:
+          <<: *revoke_lease
+
+  plan-staging:
+    <<: *docker_terraform
+    <<: *vault_addr_staging
+    steps:
+      - checkout
+      - run:
+          <<: *set_staging_env
+      - run:
+          <<: *set_auth_tokens
+      - run:
+          working_directory: ~/terraform/env-staging
+          <<: *get_consul_htpasswd
+      - run:
+          working_directory: ~/terraform/env-staging
+          <<: *terraform_init
+      - run:
+          working_directory: ~/terraform/env-staging
+          <<: *terraform_validate
+      - run:
+          working_directory: ~/terraform/env-staging
+          <<: *terraform_plan
+      - run:
+          <<: *revoke_lease
+
+  deploy-staging:
+    <<: *docker_terraform
+    <<: *vault_addr_staging
+    steps:
+      - checkout
+      - run:
+          <<: *set_staging_env
+      - run:
+          <<: *set_auth_tokens
+      - run:
+          working_directory: ~/terraform/env-staging
+          <<: *get_consul_htpasswd
+      - run:
+          working_directory: ~/terraform/env-staging
+          <<: *terraform_init
+      - run:
+          working_directory: ~/terraform/env-staging
+          <<: *terraform_validate
+      - run:
+          working_directory: ~/terraform/env-staging
+          <<: *terraform_plan
+      - run:
+          working_directory: ~/terraform/env-staging
+          <<: *terraform_apply
+      - run:
+          <<: *revoke_lease
+
+  plan-prod:
+    <<: *docker_terraform
+    <<: *vault_addr_prod
+    steps:
+      - checkout
+      - run:
+          <<: *set_prod_env
+      - run:
+          <<: *set_auth_tokens
+      - run:
+          working_directory: ~/terraform/env-production
+          <<: *get_consul_htpasswd
+      - run:
+          working_directory: ~/terraform/env-production
+          <<: *terraform_init
+      - run:
+          working_directory: ~/terraform/env-production
+          <<: *terraform_validate
+      - run:
+          working_directory: ~/terraform/env-production
+          <<: *terraform_plan
+      - run:
+          <<: *revoke_lease
+
+  deploy-prod:
+    <<: *docker_terraform
+    <<: *vault_addr_prod
+    steps:
+      - checkout
+      - run:
+          <<: *set_prod_env
+      - run:
+          <<: *set_auth_tokens
+      - run:
+          working_directory: ~/terraform/env-production
+          <<: *get_consul_htpasswd
+      - run:
+          working_directory: ~/terraform/env-production
+          <<: *terraform_init
+      - run:
+          working_directory: ~/terraform/env-production
+          <<: *terraform_validate
+      - run:
+          working_directory: ~/terraform/env-production
+          <<: *terraform_plan
+      - run:
+          working_directory: ~/terraform/env-production
+          <<: *terraform_apply
+      - run:
+          <<: *revoke_lease
+
+workflows:
+  version: 2
+  deploy-prod:
+    jobs:
+      - fmt:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+      - deploy-prod:
+          context: org-global
+          requires:
+            - fmt
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+  deploy-hotfix:
+    jobs:
+      - fmt:
+          filters:
+            tags:
+              only: /^deploy-hotfix-.+/
+            branches:
+              ignore: /.*/
+      - deploy-prod:
+          context: org-global
+          requires:
+            - fmt
+          filters:
+            tags:
+              only: /^deploy-hotfix-.+/
+            branches:
+              ignore: /.*/
+  deploy-staging:
+    jobs:
+      - fmt:
+          filters:
+            tags:
+              only: /^deploy-staging-.+/
+            branches:
+              ignore: /.*/
+      - deploy-staging:
+          context: org-global
+          requires:
+            - fmt
+          filters:
+            tags:
+              only: /^deploy-staging-.+/
+            branches:
+              ignore: /.*/
+  deploy-dev:
+    jobs:
+      - fmt:
+          filters:
+            tags:
+              only: /^deploy-dev-.+/
+            branches:
+              ignore: /.*/
+      - deploy-dev:
+          context: org-global
+          requires:
+            - fmt
+          filters:
+            tags:
+              only: /^deploy-dev-.+/
+            branches:
+              ignore: /.*/
+  build:
+    jobs:
+      - fmt
+      - base:
+          context: org-global
+          requires:
+            - fmt
+      - plan-dev:
+          context: org-global
+          requires:
+            - fmt
+      - plan-staging:
+          context: org-global
+          requires:
+            - fmt
+      - plan-prod:
+          context: org-global
+          requires:
+            - fmt

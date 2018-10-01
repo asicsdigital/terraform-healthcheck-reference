@@ -1,10 +1,10 @@
 # Healthcheck service
 
 locals {
-  consul_http_auth   = "consul:${data.vault_generic_secret.consul_http_passwd.data["value"]}"
   consul_prefix      = "${local.service_name}"
   ecs_cluster        = "asics-services-${var.env}-infra-svc"
   ecs_security_group = "ecs-sg-${local.ecs_cluster}"
+  extra_args         = "-consul-retry -consul-retry-attempts=3"
   service_fqdn       = "${local.service_name}.${local.hostname}"
   service_name       = "healthcheck"
 }
@@ -52,12 +52,8 @@ module "healthcheck" {
       "value" = "${local.consul_prefix}"
     },
     {
-      "name"  = "CONSUL_HTTP_ADDR"
-      "value" = "${local.consul_addr}"
-    },
-    {
-      "name"  = "CONSUL_HTTP_AUTH"
-      "value" = "${local.consul_http_auth}"
+      "name"  = "EXTRA_ARGS"
+      "value" = "${local.extra_args}"
     },
   ]
 }
@@ -103,8 +99,4 @@ resource "aws_route53_record" "api_aaaa" {
     zone_id                = "${module.healthcheck.alb_zone_id}"
     evaluate_target_health = false
   }
-}
-
-data "vault_generic_secret" "consul_http_passwd" {
-  path = "${var.vault_consul_http_passwd_path}"
 }
