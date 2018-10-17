@@ -67,7 +67,7 @@ revoke_lease: &revoke_lease
   name: "Revoke AWS IAM credentials from Vault"
   command: lease-revoke
 
-version: 2
+version: 2.1
 
 jobs:
   fmt:
