@@ -19,7 +19,7 @@ data "consul_keys" "pingdom" {
 locals {
   service_identifier = "${var.stack}"
   task_identifier    = "api"
-  healthcheck_path   = "healthcheck"
+  healthcheck_path   = "/healthcheck"
 }
 
 variable "integrationids" {
