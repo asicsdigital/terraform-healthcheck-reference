@@ -77,7 +77,7 @@ data "consul_keys" "vpc" {
 }
 
 provider "vault" {
-  version = "1.1.0"
+  version = "1.5.0"
   address = "${local.vault_addr}"
 }
 

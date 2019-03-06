@@ -7,20 +7,18 @@
 #$ export AWS_DEFAULT_REGION="us-west-2"
 #$ terraform plan
 provider "aws" {
-  profile = "${var.aws_profile}"
   region  = "${var.region}"
+  version = "1.60.0"
 }
 
 provider "aws" {
-  profile = "${var.aws_profile}"
-  region  = "us-east-1"
-  alias   = "us-east-1"
+  region = "us-east-1"
+  alias  = "us-east-1"
 }
 
 provider "aws" {
-  profile = "${var.aws_profile}"
-  region  = "us-west-1"
-  alias   = "us-west-1"
+  region = "us-west-1"
+  alias  = "us-west-1"
 }
 
 data "terraform_remote_state" "master_state" {

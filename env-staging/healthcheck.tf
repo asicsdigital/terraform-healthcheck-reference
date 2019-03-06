@@ -17,8 +17,27 @@ data "aws_security_group" "ecs" {
   name = "${local.ecs_security_group}"
 }
 
+resource "vault_policy" "hc" {
+  name = "hc"
+
+  policy = <<EOT
+path "secret/healthcheck" {
+  policy = "read"
+}
+EOT
+}
+
+resource "vault_aws_auth_backend_role" "healhcheck" {
+  backend                  = "aws/"
+  role                     = "hc"
+  auth_type                = "iam"
+  bound_iam_principal_arns = ["${module.healthcheck.task_iam_role_arn}"]
+  policies                 = ["hc"]
+  ttl                      = "86400"
+}
+
 module "healthcheck" {
-  source                       = "github.com/FitnessKeeper/tf_aws_ecs_service?ref=v2.4.1"
+  source                       = "github.com/FitnessKeeper/terraform-aws-ecs-service?ref=v3.1.0"
   docker_image                 = "${var.docker_image}"
   region                       = "us-east-1"
   ecs_cluster_arn              = "${data.aws_ecs_cluster.ecs.arn}"
@@ -35,6 +54,7 @@ module "healthcheck" {
   vpc_id                       = "${data.aws_vpc.vpc.id}"
   alb_healthcheck_path         = "${var.healthcheck_path}"
   alb_healthcheck_interval     = 10
+  lb_bucket_name               = "asics-devops-${data.aws_region.current.name}"
 
   docker_port_mappings = [
     {
