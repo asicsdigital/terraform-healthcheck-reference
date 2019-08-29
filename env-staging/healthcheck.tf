@@ -37,7 +37,7 @@ resource "vault_aws_auth_backend_role" "healhcheck" {
 }
 
 module "healthcheck" {
-  source                       = "github.com/FitnessKeeper/terraform-aws-ecs-service?ref=v3.1.0"
+  source                       = "github.com/FitnessKeeper/terraform-aws-ecs-service?ref=v3.2.0"
   docker_image                 = "${var.docker_image}"
   region                       = "us-east-1"
   ecs_cluster_arn              = "${data.aws_ecs_cluster.ecs.arn}"
