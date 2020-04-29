@@ -8,7 +8,7 @@
 #$ terraform plan
 provider "aws" {
   region  = "${var.region}"
-  version = "1.60.0"
+  version = "~> 2.41.0"
 }
 
 provider "aws" {

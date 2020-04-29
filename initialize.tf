@@ -11,7 +11,7 @@ variable "fqdn" {
 
 variable "docker_image" {
   type    = "string"
-  default = "asicsdigital/healthcheck:latest"
+  default = "asicsdigital/healthcheck@sha256:ace29d3632df38bf5b8ea094c14d8c6e4174aaecfa7a3f0cad1ffb98c2dcfc6f"
 }
 
 variable "ecs_desired_count" {
