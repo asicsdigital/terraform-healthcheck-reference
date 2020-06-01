@@ -37,7 +37,7 @@ resource "vault_aws_auth_backend_role" "healhcheck" {
 }
 
 module "healthcheck" {
-  source                       = "github.com/FitnessKeeper/terraform-aws-ecs-service?ref=v3.1.0"
+  source                       = "github.com/FitnessKeeper/terraform-aws-ecs-service?ref=v3.2.0"
   docker_image                 = "${var.docker_image}"
   region                       = "us-east-1"
   ecs_cluster_arn              = "${data.aws_ecs_cluster.ecs.arn}"
@@ -45,8 +45,6 @@ module "healthcheck" {
   task_identifier              = "api-${var.env}"
   ecs_security_group_id        = "${data.aws_security_group.ecs.id}"
   ecs_desired_count            = "${var.ecs_desired_count}"
-  ecs_placement_strategy_type  = "spread"
-  ecs_placement_strategy_field = "host"
   network_mode                 = "bridge"
   acm_cert_domain              = "${aws_acm_certificate.cert.domain_name}"
   alb_subnet_ids               = ["${data.aws_subnet_ids.public.ids}"]
